@@ -1,5 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+const authRoutes = require("./routes/auth.routes");
+const booksRoutes = require("./routes/books.routes");
+const ticketsRoutes = require("./routes/tickets.routes");
+const adminRoutes = require("./routes/admin.routes");
 require("dotenv").config();
 
 const app = express();
@@ -16,6 +20,11 @@ app.get("/api/health", (req, res) => {
     message: "Bookleaf API is running!",
   });
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/books", booksRoutes);
+app.use("/api/tickets", ticketsRoutes);
+app.use("/api/admin", adminRoutes);
 
 async function startServer() {
   try {

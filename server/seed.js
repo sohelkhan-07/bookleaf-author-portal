@@ -108,7 +108,7 @@ async function seedDatabase() {
           { $set: book },
           {
             upsert: true,
-            new: true,
+            returnDocument: "after",
             runValidators: true,
             setDefaultsOnInsert: true,
           },
