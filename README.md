@@ -8,7 +8,7 @@ The application provides an author portal for managing books and support request
 
 # Live Demo
 
-[**BookLeaf Author Portal**](https://YOUR-LIVE-DEMO-URL)
+[**BookLeaf Author Portal**](https://bookleaf-author-portall.netlify.app)
 
 ---
 
