@@ -2,11 +2,15 @@ BookLeaf Author Portal
 
 A full-stack author support and ticket management platform built to streamline communication between authors and the BookLeaf publishing operations team. The application provides an author portal for managing books and support requests, alongside an administrative dashboard for handling tickets with AI-assisted classification, priority assessment, and response drafting.
 
-🚀 Live Demo
+---
+
+Live Demo
 
 Live Application: "BookLeaf Author Portal" (https://YOUR-LIVE-DEMO-URL)
 
-📸 Screenshots
+---
+
+Screenshots
 
 Login Page
 
@@ -28,124 +32,148 @@ Admin Ticket Queue
 
 "Admin Ticket Queue" (docs/screenshots/admin-ticket-queue.png)
 
-📑 Table of Contents
+---
 
-- "Introduction" (#bookleaf-author-portal)
-- "Live Demo" (#-live-demo)
-- "Screenshots" (#-screenshots)
-- "Features" (#-features)
-- "Technology Stack" (#-technology-stack)
-- "System Architecture" (#-system-architecture)
-- "Project Structure" (#-project-structure)
-- "Prerequisites" (#-prerequisites)
-- "Installation and Setup" (#-installation-and-setup)
-- "Environment Variables" (#-environment-variables)
-- "Running the Application" (#-running-the-application)
-- "Available Scripts" (#-available-scripts)
-- "API Documentation" (#-api-documentation)
-- "Authentication and Authorization" (#-authentication-and-authorization)
-- "Database Models" (#-database-models)
-- "AI Integration" (#-ai-integration)
-- "Real-Time Communication" (#-real-time-communication)
-- "Database Seeding" (#-database-seeding)
-- "Troubleshooting" (#-troubleshooting)
-- "Security Considerations" (#-security-considerations)
-- "Future Improvements" (#-future-improvements)
-- "License" (#-license)
+Table of Contents
 
-✨ Features
+- "Overview" (#overview)
+- "Features" (#features)
+- "Technology Stack" (#technology-stack)
+- "System Architecture" (#system-architecture)
+- "Project Structure" (#project-structure)
+- "Getting Started" (#getting-started)
+- "Environment Configuration" (#environment-configuration)
+- "Running the Application" (#running-the-application)
+- "Available Scripts" (#available-scripts)
+- "API Documentation" (#api-documentation)
+- "Authentication and Authorization" (#authentication-and-authorization)
+- "Database Models" (#database-models)
+- "AI Integration" (#ai-integration)
+- "Real-Time Communication" (#real-time-communication)
+- "Database Seeding" (#database-seeding)
+- "Troubleshooting" (#troubleshooting)
+- "Security Considerations" (#security-considerations)
+- "Future Improvements" (#future-improvements)
+- "License" (#license)
+
+---
+
+Overview
+
+BookLeaf Author Portal is designed to improve the way authors interact with the BookLeaf publishing operations team. It provides a centralized platform for book-related information, support tickets, and communication between authors and administrators.
+
+The application combines a React frontend with an Express backend, MongoDB for data persistence, Socket.IO for real-time communication, and Google's Gemini API for AI-assisted ticket processing.
+
+The platform separates author and administrator workflows through role-based access control, providing dedicated interfaces for submitting and tracking support requests and managing tickets.
+
+Features
 
 Author Portal
 
-- User Authentication: Registration and login using JWT-based authentication.
-- Author Dashboard: A dedicated dashboard for authors.
-- Book Management: View book-related information associated with the author's account.
-- Support Ticket Creation: Submit support queries through the ticket system.
-- Ticket Tracking: View submitted tickets and monitor their status.
-- Ticket Conversations: Communicate with the support team through ticket messages.
-- Role-Based Access: Access author-specific features and resources.
+- Secure registration and login.
+- Author dashboard for accessing relevant information.
+- Book listing and book-related information.
+- Support ticket creation and tracking.
+- Ticket conversation and messaging functionality.
+- Dedicated author interface for managing support requests.
 
-Admin Portal
+Administrative Dashboard
 
-- Administrative Dashboard: A dedicated interface for support operations.
-- Centralized Ticket Queue: Review tickets submitted by authors.
-- Ticket Classification: AI-assisted categorization of support requests.
-- Priority Assessment: Categorize ticket urgency using priority levels.
-- AI-Assisted Responses: Generate draft responses to help administrators handle queries.
-- Ticket Workflow Management: Manage ticket statuses and support operations.
+- Dedicated administrator interface.
+- Centralized ticket queue.
+- Ticket management and status tracking.
+- Ticket priority and category information.
+- Support workflow for handling author requests.
 
 AI-Assisted Support
 
-The backend includes dedicated services for Google Gemini integration, ticket AI processing, and a BookLeaf knowledge base. These services support AI-assisted ticket handling while keeping AI logic separate from the main route handlers.
+- Gemini-powered AI service integration.
+- AI-assisted ticket classification and priority assessment.
+- AI-assisted response drafting.
+- BookLeaf knowledge-base service integration.
+
+AI-generated responses depend on API availability, quota limits, and successful processing. AI functionality may be unavailable when the configured service reaches its usage limit.
 
 Real-Time Communication
 
-Socket.IO is integrated into the application to support real-time communication between the client and server.
+- Socket.IO integration between the frontend and backend.
+- Real-time communication infrastructure for supported application events.
+- Automatic reconnection configuration in the frontend socket client.
 
-🛠️ Technology Stack
+Security and Data Management
 
-Category| Technologies
-Frontend| React, JavaScript, Vite
-Styling| Tailwind CSS
-Icons| Lucide React
+- JWT-based authentication.
+- Password hashing with bcrypt.
+- Role-based authorization middleware.
+- MongoDB data persistence using Mongoose.
+- Environment-based configuration for secrets and connection settings.
+
+---
+
+Technology Stack
+
+Layer| Technologies
+Frontend| React, Vite, JavaScript
 Routing| React Router
-Backend| Node.js, Express.js
+Styling| Tailwind CSS 4
+Icons| Lucide React
+Backend| Node.js, Express
 Database| MongoDB, Mongoose
 Authentication| JSON Web Tokens, bcryptjs
-AI Integration| Google Gemini API, "@google/genai"
-Real-Time Communication| Socket.IO
-Input Validation| Zod
-Development Tools| ESLint, Nodemon
+Real-time communication| Socket.IO
+AI integration| Google Gemini API through "@google/genai"
+Validation| Zod
+Frontend tooling| ESLint
+Backend development| Nodemon
 
-🏗️ System Architecture
+---
 
-The application follows a client-server architecture with separate frontend and backend applications.
+System Architecture
 
-                   ┌──────────────────────┐
-                   │        Users         │
-                   │   Authors / Admins   │
-                   └──────────┬───────────┘
-                              │
-                              ▼
-                   ┌──────────────────────┐
-                   │   React Frontend     │
-                   │   Vite + Router      │
-                   └──────────┬───────────┘
-                              │
-                     REST API / Socket.IO
-                              │
-                              ▼
-                   ┌──────────────────────┐
-                   │   Express Backend    │
-                   │ Authentication       │
-                   │ Authorization        │
-                   │ API Routes           │
-                   │ AI Services          │
-                   └──────────┬───────────┘
-                              │
-                    ┌─────────┴──────────┐
-                    ▼                    ▼
-          ┌─────────────────┐  ┌─────────────────┐
-          │    MongoDB      │  │   Gemini API    │
-          │ Application Data│  │  AI Processing  │
-          └─────────────────┘  └─────────────────┘
+The application follows a client-server architecture.
 
-Architecture Components
++---------------------------+
+|       React Frontend      |
+|                           |
+|  Author Portal            |
+|  Admin Dashboard          |
+|  Authentication           |
++-------------+-------------+
+              |
+              | HTTP / REST API
+              | Socket.IO
+              |
++-------------v-------------+
+|      Express Backend      |
+|                           |
+|  Authentication Routes    |
+|  Book Routes              |
+|  Ticket Routes            |
+|  Admin Routes             |
+|  Authentication Middleware|
+|  AI Services              |
++----------+---------+------+
+           |         |
+           |         |
++----------v---+ +---v----------------+
+|   MongoDB    | | Google Gemini API  |
+|              | |                    |
+| Users        | | AI-assisted ticket |
+| Books        | | processing         |
+| Tickets      | |                    |
++--------------+ +--------------------+
 
-- Frontend: React-based interfaces for authors and administrators.
-- REST API: Express routes handle authentication, books, tickets, and administrative operations.
-- Authentication Middleware: Validates JWTs and enforces access permissions.
-- Database Layer: Mongoose models manage MongoDB records.
-- AI Services: Process ticket-related AI tasks and provide BookLeaf knowledge-base context.
-- Socket.IO: Provides real-time communication infrastructure.
+The frontend communicates with the backend through REST API endpoints and Socket.IO. The backend handles authentication, business logic, database operations, and integration with the AI service.
 
-📁 Project Structure
+---
+
+Project Structure
 
 bookleaf-author-portal/
 ├── .gitignore
-├── README.md
 ├── package.json
 ├── package-lock.json
+├── README.md
 ├── docs/
 │   └── screenshots/
 │       ├── login.png
@@ -198,14 +226,13 @@ bookleaf-author-portal/
 │               └── MyTicketsPage.jsx
 │
 └── server/
-    ├── db.js
     ├── package.json
-    ├── package-lock.json
-    ├── realtime.js
-    ├── seed-admin.js
-    ├── seed.js
+    ├── db.js
     ├── server.js
+    ├── realtime.js
     ├── socket.js
+    ├── seed.js
+    ├── seed-admin.js
     ├── data/
     │   └── sample-data.json
     ├── middleware/
@@ -224,76 +251,63 @@ bookleaf-author-portal/
         ├── gemini.service.js
         └── ticket-ai.service.js
 
-Directory Overview
+The "node_modules/" directories and local environment files are generated or machine-specific and are not included in this project structure.
 
-Directory / File| Description
-"client/src/components/"| Reusable interface components.
-"client/src/context/"| Authentication context and related hooks.
-"client/src/layouts/"| Author and admin layouts.
-"client/src/lib/"| API and Socket.IO client utilities.
-"client/src/pages/"| Application pages grouped by role and purpose.
-"server/models/"| MongoDB schemas and data models.
-"server/routes/"| REST API route handlers.
-"server/middleware/"| Authentication and authorization middleware.
-"server/services/"| AI integration and knowledge-base logic.
-"server/data/"| Sample application data.
-"server/server.js"| Backend application entry point.
-"server/db.js"| Database connection logic.
+---
 
-Dependency directories such as "node_modules/" are excluded from version control.
+Getting Started
 
-📋 Prerequisites
+Prerequisites
 
-Ensure the following tools and services are available before setting up the project:
+Make sure the following are installed on your system:
 
-- "Node.js" (https://nodejs.org/)
-- npm, included with Node.js
-- "MongoDB" (https://www.mongodb.com/) local installation or hosted database
-- "Google Gemini API key" (https://aistudio.google.com/)
-- "Git" (https://git-scm.com/)
+- "Node.js" (https://nodejs.org/) with npm.
+- "Git" (https://git-scm.com/).
+- A MongoDB database, either locally or through "MongoDB Atlas" (https://www.mongodb.com/atlas).
+- A Google Gemini API key for AI-assisted functionality.
 
-Verify the installations:
+Installation
 
-node --version
-npm --version
-git --version
-
-🚀 Installation and Setup
-
-1. Clone the Repository
+1. Clone the repository
 
 git clone https://github.com/sohelkhan-07/bookleaf-author-portal.git
+
+2. Navigate to the project directory
+
 cd bookleaf-author-portal
 
-2. Install Frontend Dependencies
+3. Install frontend dependencies
 
 cd client
 npm install
 
-3. Install Backend Dependencies
+4. Install backend dependencies
 
-Open another terminal in the project root and run:
+Open a second terminal from the project root, then run:
 
 cd server
 npm install
 
-The frontend and backend maintain separate dependency configurations.
+The frontend and backend have separate package files and must be installed separately.
 
-4. Configure Environment Variables
+---
 
-Create the environment files described in the next section before starting the application.
+Environment Configuration
 
-🔐 Environment Variables
+The application uses environment variables for database access, authentication, frontend connectivity, and AI integration.
 
 Backend Configuration
 
-Create "server/.env":
+Create a file named ".env" inside the "server/" directory.
+
+File: "server/.env"
 
 PORT=5000
 CLIENT_URL=http://localhost:5173
 
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_long_random_jwt_secret
+
 GEMINI_API_KEY=your_gemini_api_key
 
 ADMIN_NAME=Your Admin Name
@@ -302,147 +316,198 @@ ADMIN_PASSWORD=your_admin_password
 
 SEED_AUTHOR_PASSWORD=your_test_author_password
 
-Replace the example values with your own development configuration. Do not commit this file to version control.
+Replace the example values with your own configuration. Use a strong, unique JWT secret and secure passwords.
 
-Variable| Description
+Frontend Configuration
+
+Create a file named ".env" inside the "client/" directory.
+
+File: "client/.env"
+
+VITE_API_URL=http://localhost:5000/api
+
+The frontend uses this variable to determine the backend API base URL. If it is not configured, the API helper defaults to "http://localhost:5000/api".
+
+Environment Variable Reference
+
+Variable| Purpose
 "PORT"| Port on which the backend server listens.
 "CLIENT_URL"| Frontend origin configuration.
 "MONGODB_URI"| MongoDB connection string.
-"JWT_SECRET"| Secret used for JWT signing and verification.
-"GEMINI_API_KEY"| API key for the Gemini integration.
+"JWT_SECRET"| Secret used for signing and verifying JWTs.
+"GEMINI_API_KEY"| API key for Gemini integration.
 "ADMIN_NAME"| Administrator name used by the admin seed configuration.
 "ADMIN_EMAIL"| Administrator email used by the admin seed configuration.
 "ADMIN_PASSWORD"| Administrator password used by the admin seed configuration.
 "SEED_AUTHOR_PASSWORD"| Password used by the author seed configuration.
+"VITE_API_URL"| Frontend API base URL.
 
-Frontend Configuration
+Never commit real ".env" files, database credentials, API keys, or authentication secrets to version control.
 
-Create "client/.env":
+---
 
-VITE_API_URL=http://localhost:5000/api
+Running the Application
 
-The frontend uses "VITE_API_URL" to determine the backend API base URL. If the variable is not set, the API helper falls back to "http://localhost:5000/api".
-
-Security note: Variables prefixed with "VITE_" are exposed to frontend code. Never store database credentials, JWT secrets, administrator passwords, or AI API keys in frontend environment variables.
-
-▶️ Running the Application
-
-Start the backend and frontend in separate terminals.
+The frontend and backend must run in separate terminals during local development.
 
 Start the Backend
 
+In the first terminal:
+
 cd server
 npm run dev
-
-The development command uses Nodemon to restart the backend when files change.
 
 To run the backend without Nodemon:
 
 npm start
 
-The backend defaults to port "5000" when no custom port is configured.
+The default backend port is "5000", unless overridden by the "PORT" environment variable.
 
 Start the Frontend
 
-In a second terminal:
+In the second terminal:
 
 cd client
 npm run dev
 
-Open the local development URL displayed by Vite. The default is usually:
+Vite will display the local development URL in the terminal. With the default configuration, this is typically:
 
 http://localhost:5173
 
-Ensure that MongoDB is reachable and both the backend and frontend are running.
+Open the displayed frontend URL in your browser.
 
-📜 Available Scripts
+Build the Frontend for Production
+
+From the "client/" directory:
+
+npm run build
+
+The production build is generated in the frontend's "dist/" directory.
+
+---
+
+Available Scripts
 
 Frontend Scripts
 
-Run these commands from the "client/" directory.
+Run these commands from "client/".
 
 Command| Description
-"npm run dev"| Start the Vite development server.
-"npm run build"| Build the frontend for production.
-"npm run lint"| Run ESLint checks.
-"npm run preview"| Preview the production build locally.
+"npm run dev"| Starts the Vite development server.
+"npm run build"| Builds the frontend for production.
+"npm run lint"| Runs ESLint.
+"npm run preview"| Previews the production build locally.
 
 Backend Scripts
 
-Run these commands from the "server/" directory.
+Run these commands from "server/".
 
 Command| Description
-"npm start"| Start the backend with Node.js.
-"npm run dev"| Start the backend with Nodemon.
+"npm start"| Starts the Express server.
+"npm run dev"| Starts the server using Nodemon.
 
-🔌 API Documentation
+---
 
-The Express server mounts four main API route groups.
+API Documentation
 
-Base Endpoint| Responsibility
-"/api/auth"| Authentication and current-user operations.
-"/api/books"| Book-related operations.
-"/api/tickets"| Author ticket operations and conversations.
-"/api/admin"| Administrative support operations.
+The backend exposes REST API routes under the "/api" prefix.
 
-Authentication Endpoints
+Base URL for local development:
 
-Method| Endpoint| Description| Access
-"POST"| "/api/auth/register"| Register a user account.| Public registration flow
-"POST"| "/api/auth/login"| Authenticate a user.| Public
-"GET"| "/api/auth/me"| Retrieve the authenticated user's information.| Authenticated
+http://localhost:5000/api
 
-Ticket Endpoints
+Authentication Routes
 
-Method| Endpoint| Description| Access
-"POST"| "/api/tickets"| Create a support ticket.| Author
-"GET"| "/api/tickets/my-tickets"| Retrieve tickets belonging to the author.| Author
-"GET"| "/api/tickets/:id"| Retrieve a ticket by ID.| Author, subject to route authorization
-"POST"| "/api/tickets/:id/messages"| Add a message to a ticket.| Author, subject to route authorization
+Base path: "/api/auth"
+
+Method| Endpoint| Description
+"POST"| "/api/auth/register"| Registers an author.
+"POST"| "/api/auth/login"| Authenticates a user.
+"GET"| "/api/auth/me"| Retrieves the authenticated user's information.
+
+The "/me" endpoint requires authentication.
+
+Book Routes
+
+Base path: "/api/books"
+
+Book-related operations are handled by "server/routes/books.routes.js". Consult that file for the exact supported methods, endpoints, request payloads, and authorization requirements.
+
+Ticket Routes
+
+Base path: "/api/tickets"
+
+Method| Endpoint| Description
+"POST"| "/api/tickets"| Creates a support ticket for an authenticated author.
+"GET"| "/api/tickets/my-tickets"| Retrieves the authenticated author's tickets.
+"GET"| "/api/tickets/:id"| Retrieves a ticket by its ID, subject to authorization.
+"POST"| "/api/tickets/:id/messages"| Adds a message to a ticket conversation.
+
+These ticket routes use authentication middleware. The ticket creation and messaging routes include author-role restrictions where configured in the route definitions.
+
+Administrative Routes
+
+Base path: "/api/admin"
+
+Administrative operations are implemented in "server/routes/admin.routes.js". Refer to the route definitions for the exact endpoints and required permissions.
 
 Authentication Header
 
-Protected API requests use a JWT Bearer token:
+For protected endpoints, send the JWT using the Bearer authorization scheme:
 
 Authorization: Bearer YOUR_JWT_TOKEN
 
-Books and Administrative Routes
+The exact request body and response format depend on the individual endpoint implementation.
 
-Additional routes are available under "/api/books" and "/api/admin". Their exact methods, paths, query parameters, and request payloads are defined in:
+---
 
-- "server/routes/books.routes.js"
-- "server/routes/admin.routes.js"
+Authentication and Authorization
 
-🛡️ Authentication and Authorization
+The application uses JSON Web Tokens for authentication.
 
-The application uses JSON Web Tokens for authentication and "bcryptjs" for password hashing support.
+The authentication system includes:
 
-The backend includes authentication middleware and role-based authorization for protected functionality.
+- User registration and login endpoints.
+- Password hashing using "bcryptjs".
+- JWT-based authentication.
+- Middleware for verifying authenticated requests.
+- Role-based authorization for author and administrator workflows.
+- Protected frontend routes.
 
-The defined user roles are:
+The "User" model defines the supported roles as "author" and "admin".
+
+Authentication and role checks should be enforced on the backend rather than relying exclusively on frontend route protection.
+
+---
+
+Database Models
+
+The application uses MongoDB with Mongoose schemas to organize persistent data.
+
+User
+
+The "User" model represents registered users and their application roles.
+
+The role field supports:
 
 - "author"
 - "admin"
 
-Access to protected resources should be validated on the backend. Author access should be restricted to the authenticated author's own data, while administrative operations should require the appropriate permissions.
-
-🗄️ Database Models
-
-The application uses MongoDB with Mongoose.
-
-User
-
-Defined in "server/models/User.js", this model represents user accounts and includes role information.
+Authentication-related information is handled by the backend.
 
 Book
 
-Defined in "server/models/Book.js", this model represents book records used by the author portal.
+The "Book" model represents book records used by the author portal. It includes a reference to the associated user.
+
+See "server/models/Book.js" for the complete schema and default values.
 
 Ticket
 
-Defined in "server/models/Ticket.js", this model represents support requests, associated users and books, and ticket conversations.
+The "Ticket" model represents author support requests and their associated conversations.
 
-The ticket schema defines the following statuses:
+The schema includes references to users and books, ticket status, priority, category, and conversation messages.
+
+Supported ticket statuses:
 
 - "Open"
 - "In Progress"
@@ -450,55 +515,49 @@ The ticket schema defines the following statuses:
 - "Resolved"
 - "Closed"
 
-Supported priority levels include:
+Supported priority levels:
 
 - "Critical"
 - "High"
 - "Medium"
 - "Low"
 
-The schema also defines ticket categories and conversation message roles.
+Conversation message roles include:
 
-Refer to the model files for the exact fields, references, defaults, and validation rules.
+- "ai"
+- "author"
+- "admin"
 
-🤖 AI Integration
+The schema defines "Open" as the default status and "Medium" as the default priority.
 
-AI-related functionality is separated into dedicated backend service modules:
+For the complete field definitions and validation rules, refer to the model files in "server/models/".
 
-- "server/services/gemini.service.js"
-- "server/services/ticket-ai.service.js"
-- "server/services/bookleaf-knowledge-base.js"
+---
 
-The application uses the Google Gemini SDK through the "@google/genai" package.
+AI Integration
 
-AI-Assisted Workflow
+The application integrates with Google's Gemini API through the "@google/genai" package.
 
-1. An author submits a support ticket.
-2. The backend processes the ticket request.
-3. AI services can assist with ticket categorization and priority assessment.
-4. An administrator can use an AI-generated response draft as a starting point.
-5. The administrator can review and respond to the author through the ticket workflow.
+AI-related services are organized under "server/services/":
 
-The knowledge-base service provides a dedicated location for BookLeaf-specific information used by AI support features.
+File| Responsibility
+"gemini.service.js"| Gemini API integration.
+"ticket-ai.service.js"| AI-assisted ticket processing.
+"bookleaf-knowledge-base.js"| BookLeaf-related knowledge-base functionality.
 
-AI Reliability
+The AI integration supports workflows such as ticket classification, priority assessment, and response drafting, depending on the implemented service flow.
 
-AI providers may enforce request quotas, rate limits, or daily usage limits. If the quota is exhausted, AI-generated classification or response drafting may be unavailable until access is restored or the quota resets.
+API Quotas and Availability
 
-Ticket persistence and AI response generation are separate concerns. A ticket may be saved even when AI processing fails, depending on the backend's error-handling implementation.
+Gemini API requests may fail when the configured API key is invalid, the service is unavailable, or usage quotas and rate limits are reached.
 
-For production use, AI integrations should include:
+If AI processing fails, inspect the backend logs and the relevant service implementation. Do not assume that a missing AI response means the ticket itself was not saved; verify the ticket in the application or database.
 
-- Graceful handling of provider errors and rate limits.
-- Input and output validation.
-- Human review before sending AI-generated replies.
-- Prompt-size and token-usage controls.
-- Safe logging that avoids exposing sensitive data.
-- A manual response path when AI functionality is unavailable.
+---
 
-⚡ Real-Time Communication
+Real-Time Communication
 
-Socket.IO is integrated into both the backend and frontend.
+The application uses Socket.IO for real-time communication.
 
 Relevant files include:
 
@@ -506,80 +565,112 @@ Relevant files include:
 - "server/realtime.js"
 - "client/src/lib/socket.js"
 
-The frontend socket client is configured to reconnect after connection interruptions.
+The frontend socket client is configured for reconnection and derives the server URL from the configured API base URL.
 
-Actual ticket event names, payloads, authorization rules, and update behavior are defined in the Socket.IO implementation.
+Real-time functionality depends on a running backend server and a valid frontend-to-backend connection.
 
-🌱 Database Seeding
+---
 
-The backend includes the following seed-related files:
+Database Seeding
+
+The backend contains seed scripts for initializing application data and administrator configuration.
+
+Relevant files:
 
 - "server/seed.js"
 - "server/seed-admin.js"
 - "server/data/sample-data.json"
 
-These files support the project's sample-data and administrator setup workflows.
+The seed scripts may rely on environment variables such as "ADMIN_NAME", "ADMIN_EMAIL", "ADMIN_PASSWORD", and "SEED_AUTHOR_PASSWORD".
 
-Before executing a seed script, review its source to understand which records it creates or modifies. Use a development database when testing and ensure the relevant environment variables are configured.
+Review the relevant script before executing it to understand which records it creates or modifies.
 
-🧰 Troubleshooting
+Run seed scripts from the "server/" directory using Node.js when required by your development setup. For example:
+
+node seed.js
+
+The administrator seed script can be inspected and run separately if needed:
+
+node seed-admin.js
+
+Do not run seed scripts against production data without reviewing their behavior first.
+
+---
+
+Troubleshooting
 
 Frontend Cannot Connect to the Backend
 
 - Confirm that the backend is running.
-- Check "VITE_API_URL" in "client/.env".
-- Verify the backend port and API base URL.
-- Inspect the browser console and network panel for request failures.
+- Verify "VITE_API_URL" in "client/.env".
+- Check the backend port and the configured frontend origin.
 - Restart the Vite development server after changing environment variables.
 
 MongoDB Connection Errors
 
-- Verify the "MONGODB_URI" value.
-- Ensure the MongoDB instance is running and reachable.
-- Check database credentials and network access settings.
-- Review backend terminal logs for connection errors.
+- Verify "MONGODB_URI".
+- Confirm that the database service is running or that your MongoDB Atlas cluster is accessible.
+- Check database network access and authentication settings.
+- Review the backend logs for connection errors.
 
-Authentication Problems
+Authentication Errors
 
-- Verify the account credentials.
-- Ensure "JWT_SECRET" is configured.
-- Confirm that protected requests include the Bearer token.
-- Inspect backend responses for authentication and authorization errors.
+- Verify that the backend has a valid "JWT_SECRET".
+- Ensure the frontend sends the token using the Bearer authorization header.
+- Check whether the token is missing, invalid, or expired.
+- Confirm that the account has the required role for the requested operation.
 
-AI Daily Limit or Quota Errors
+AI Responses Are Missing
 
-- Verify that "GEMINI_API_KEY" is valid.
-- Check the Gemini API quota and usage limits.
-- Review backend logs to identify the failed AI operation.
-- Check whether the ticket was saved before the AI request failed.
-- Use the administrative interface's manual response capability if it is available.
+- Verify "GEMINI_API_KEY".
+- Inspect the backend logs for API errors.
+- Check whether the Gemini API quota or rate limit has been reached.
+- Verify that the relevant AI service is being invoked by the ticket workflow.
 
-Real-Time Updates Not Working
+Socket.IO Connection Issues
 
-- Ensure both frontend and backend are running.
-- Check the browser console for Socket.IO errors.
-- Review server event handlers and frontend event subscriptions.
-- Confirm that the connection and authorization requirements are satisfied.
+- Ensure the backend server is running.
+- Verify the frontend API URL.
+- Inspect browser developer tools and backend logs for connection errors.
+- Confirm that the deployment environment supports persistent Socket.IO connections.
 
-🔒 Security Considerations
+Frontend Build Errors
 
-- Keep environment files out of version control.
-- Never expose API keys or server secrets in frontend code.
-- Use strong, unique credentials.
-- Validate user input on the backend.
-- Enforce resource ownership and role permissions on the server.
-- Avoid logging passwords, tokens, and sensitive ticket conversations.
-- Use HTTPS and appropriately restricted CORS settings in production.
-- Rotate any credentials that are accidentally exposed.
+Run the following commands from "client/":
 
-🔮 Future Improvements
+npm install
+npm run lint
+npm run build
 
-- OpenAPI or Swagger documentation for all API endpoints.
-- Automated unit, integration, and end-to-end tests.
-- More detailed administrative audit logs.
-- Improved AI failure monitoring and usage analytics.
-- Rate limiting and additional production security controls.
-- Expanded support analytics and ticket resolution metrics.
-- Deployment automation and production environment documentation.
-- More detailed documentation for real-time event payloads.
+Review any reported dependency, linting, or compilation errors before deploying.
+
+---
+
+Security Considerations
+
+- Never commit ".env" files or API credentials.
+- Use strong, unique secrets for JWT signing.
+- Store passwords using secure password hashing.
+- Validate incoming request data on the backend.
+- Enforce authentication and role-based authorization for protected endpoints.
+- Configure CORS appropriately for the intended deployment.
+- Protect database credentials and restrict database access.
+- Review seed scripts before using them with production data.
+- Avoid exposing sensitive information in application logs or API responses.
+
+---
+
+Future Improvements
+
+Potential areas for further development include:
+
+- Automated testing for frontend components and backend routes.
+- More comprehensive API documentation with request and response examples.
+- Enhanced ticket analytics and reporting.
+- Improved AI failure handling and fallback workflows.
+- Expanded administrative filtering and search capabilities.
+- Production deployment with environment-specific configuration.
+- Monitoring and structured logging for backend services.
+
+---
 
