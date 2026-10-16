@@ -69,6 +69,11 @@ const ticketSchema = new mongoose.Schema(
           ref: "User",
           required: true,
         },
+        senderType: {
+          type: String,
+          enum: ["ai", "author", "admin"],
+          default: "author",
+        },
         message: {
           type: String,
           required: true,

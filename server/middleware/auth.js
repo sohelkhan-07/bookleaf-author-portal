@@ -50,7 +50,7 @@ async function authenticateToken(req, res, next) {
     ) {
       return res.status(401).json({
         success: false,
-        message: "Invalid or expired authentication token.",
+        message: "Your session has expired, Please sign out and log in again.",
       });
     }
 

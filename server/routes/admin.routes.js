@@ -1,10 +1,13 @@
 const express = require("express");
 const { z } = require("zod");
+const mongoose = require("mongoose");
+
 const Ticket = require("../models/Ticket");
 const Book = require("../models/Book");
 const User = require("../models/User");
 const { authenticateToken, requireRole } = require("../middleware/auth");
 const { draftTicketReply } = require("../services/ticket-ai.service");
+const { emitTicketChanged } = require("../realtime");
 
 const router = express.Router();
 
@@ -26,9 +29,35 @@ const STATUSES = [
 ];
 
 const PRIORITIES = ["Critical", "High", "Medium", "Low"];
+const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+
+const messageSchema = z.object({
+  message: z.string().trim().min(1).max(5000),
+  internal: z.boolean().default(false),
+});
+
+const updateTicketSchema = z
+  .object({
+    status: z.enum(STATUSES).optional(),
+    category: z.enum(CATEGORIES).optional(),
+    priority: z.enum(PRIORITIES).optional(),
+    assignedTo: z.string().regex(OBJECT_ID_REGEX).nullable().optional(),
+  })
+  .refine(
+    (data) =>
+      data.status !== undefined ||
+      data.category !== undefined ||
+      data.priority !== undefined ||
+      data.assignedTo !== undefined,
+    { message: "Provide at least one field to update." },
+  );
+
+function validTicketId(id) {
+  return OBJECT_ID_REGEX.test(id);
+}
 
 // GET /api/admin/tickets
-// View and filter the support queue.
+// List and filter the admin ticket queue.
 router.get(
   "/tickets",
   authenticateToken,
@@ -39,6 +68,8 @@ router.get(
         status: z.enum(STATUSES).optional(),
         category: z.enum(CATEGORIES).optional(),
         priority: z.enum(PRIORITIES).optional(),
+        from: z.iso.datetime({ offset: true }).optional(),
+        to: z.iso.datetime({ offset: true }).optional(),
       });
 
       const validation = filterSchema.safeParse(req.query);
@@ -54,12 +85,35 @@ router.get(
         });
       }
 
-      const query = {};
       const filters = validation.data;
+      const query = {};
 
       if (filters.status) query.status = filters.status;
       if (filters.category) query.category = filters.category;
       if (filters.priority) query.priority = filters.priority;
+
+      if (filters.from || filters.to) {
+        query.createdAt = {};
+
+        if (filters.from) {
+          query.createdAt.$gte = new Date(filters.from);
+        }
+
+        if (filters.to) {
+          query.createdAt.$lte = new Date(filters.to);
+        }
+
+        if (
+          filters.from &&
+          filters.to &&
+          new Date(filters.from) > new Date(filters.to)
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "The start date must be before the end date.",
+          });
+        }
+      }
 
       const tickets = await Ticket.find(query)
         .populate("author", "name email authorId")
@@ -84,33 +138,59 @@ router.get(
   },
 );
 
-// PATCH /api/admin/tickets/:id
-// Update status, priority, or assignee.
-const updateTicketSchema = z
-  .object({
-    status: z.enum(STATUSES).optional(),
-    priority: z.enum(PRIORITIES).optional(),
-    assignedTo: z
-      .string()
-      .regex(/^[0-9a-fA-F]{24}$/)
-      .nullable()
-      .optional(),
-  })
-  .refine(
-    (data) =>
-      data.status !== undefined ||
-      data.priority !== undefined ||
-      data.assignedTo !== undefined,
-    { message: "Provide at least one field to update." },
-  );
+// GET /api/admin/tickets/:id
+// Return the ticket conversation, including private internal notes.
+router.get(
+  "/tickets/:id",
+  authenticateToken,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      if (!validTicketId(req.params.id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid ticket ID.",
+        });
+      }
 
+      const ticket = await Ticket.findById(req.params.id)
+        .populate("author", "name email authorId")
+        .populate("book", "title bookId isbn status")
+        .populate("assignedTo", "name email")
+        .populate("messages.sender", "name email role")
+        .lean();
+
+      if (!ticket) {
+        return res.status(404).json({
+          success: false,
+          message: "Ticket not found.",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        ticket,
+      });
+    } catch (error) {
+      console.error("Admin ticket detail error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to retrieve ticket details.",
+      });
+    }
+  },
+);
+
+// PATCH /api/admin/tickets/:id
+// Update status, category, priority, or assignee.
 router.patch(
   "/tickets/:id",
   authenticateToken,
   requireRole("admin"),
   async (req, res) => {
     try {
-      if (!/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+      if (!validTicketId(req.params.id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid ticket ID.",
@@ -152,6 +232,7 @@ router.patch(
         { new: true, runValidators: true },
       )
         .populate("author", "name email authorId")
+        .populate("book", "title bookId isbn")
         .populate("assignedTo", "name email");
 
       if (!ticket) {
@@ -160,6 +241,8 @@ router.patch(
           message: "Ticket not found.",
         });
       }
+
+      emitTicketChanged(req, ticket, { action: "updated" });
 
       return res.status(200).json({
         success: true,
@@ -178,14 +261,14 @@ router.patch(
 );
 
 // POST /api/admin/tickets/:id/ai-draft
-// Generate and save an editable draft. Nothing is sent automatically.
+// Generate a draft for admin review; never send it automatically.
 router.post(
   "/tickets/:id/ai-draft",
   authenticateToken,
   requireRole("admin"),
   async (req, res) => {
     try {
-      if (!/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+      if (!validTicketId(req.params.id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid ticket ID.",
@@ -210,7 +293,6 @@ router.post(
         });
       }
 
-      // Only retrieve books belonging to this ticket's author.
       const books = await Book.find({
         author: ticket.author._id,
       })
@@ -230,15 +312,12 @@ router.post(
         )
         .lean();
 
-      // Use the linked book if it belongs to this author.
       const selectedBook = ticket.book
         ? books.find(
             (book) => book._id.toString() === ticket.book._id.toString(),
           )
         : null;
 
-      // If a book is linked, use only that book. Otherwise provide the
-      // author's books as context without assuming which one the ticket concerns.
       const relevantBooks = selectedBook ? [selectedBook] : books;
 
       const bookContext = relevantBooks.map((book) => ({
@@ -267,6 +346,11 @@ router.post(
       ticket.aiDraftReply = draft;
       await ticket.save();
 
+      emitTicketChanged(req, ticket, {
+        action: "updated",
+        authorVisible: false,
+      });
+
       return res.status(200).json({
         success: true,
         message:
@@ -290,24 +374,19 @@ router.post(
 );
 
 // POST /api/admin/tickets/:id/messages
-// Add an author-facing reply or an internal note.
+// Send a public reply or private internal note.
 router.post(
   "/tickets/:id/messages",
   authenticateToken,
   requireRole("admin"),
   async (req, res) => {
     try {
-      if (!/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+      if (!validTicketId(req.params.id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid ticket ID.",
         });
       }
-
-      const messageSchema = z.object({
-        message: z.string().trim().min(1).max(5000),
-        internal: z.boolean().default(false),
-      });
 
       const validation = messageSchema.safeParse(req.body);
 
@@ -315,10 +394,7 @@ router.post(
         return res.status(400).json({
           success: false,
           message: "Provide a valid message.",
-          errors: validation.error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-          })),
+          errors: validation.error.flatten(),
         });
       }
 
@@ -331,17 +407,32 @@ router.post(
         });
       }
 
+      const isInternal = validation.data.internal;
+
       ticket.messages.push({
         sender: req.user.id,
+        senderType: "admin",
         message: validation.data.message,
-        internal: validation.data.internal,
+        internal: isInternal,
       });
+
+      if (
+        !isInternal &&
+        ["Open", "Waiting for Author"].includes(ticket.status)
+      ) {
+        ticket.status = "In Progress";
+      }
 
       await ticket.save();
 
+      emitTicketChanged(req, ticket, {
+        action: isInternal ? "internal-note" : "message",
+        authorVisible: !isInternal,
+      });
+
       return res.status(201).json({
         success: true,
-        message: validation.data.internal
+        message: isInternal
           ? "Internal note added successfully."
           : "Reply added successfully.",
       });
@@ -351,6 +442,115 @@ router.post(
       return res.status(500).json({
         success: false,
         message: "Unable to add the message.",
+      });
+    }
+  },
+);
+
+// DELETE /api/admin/tickets/:id/messages/:messageId
+// Permanently delete one message, leaving the ticket intact.
+router.delete(
+  "/tickets/:id/messages/:messageId",
+  authenticateToken,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const { id, messageId } = req.params;
+
+      if (!validTicketId(id) || !validTicketId(messageId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid ticket ID or message ID.",
+        });
+      }
+
+      const ticket = await Ticket.findById(id);
+
+      if (!ticket) {
+        return res.status(404).json({
+          success: false,
+          message: "Ticket not found.",
+        });
+      }
+
+      const message = ticket.messages.id(messageId);
+
+      if (!message) {
+        return res.status(404).json({
+          success: false,
+          message: "Message not found.",
+        });
+      }
+
+      // Remember visibility before removing the message.
+      const wasInternal = message.internal === true;
+
+      ticket.messages.pull(messageId);
+      await ticket.save();
+
+      emitTicketChanged(req, ticket, {
+        action: "message-deleted",
+        authorVisible: !wasInternal,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Message deleted successfully.",
+        deletedMessageId: messageId,
+        ticketId: id,
+      });
+    } catch (error) {
+      console.error("Admin message deletion error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to delete the message.",
+      });
+    }
+  },
+);
+
+// DELETE /api/admin/tickets/:id
+// Permanently delete a ticket. The frontend must ask for confirmation.
+router.delete(
+  "/tickets/:id",
+  authenticateToken,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      if (!validTicketId(req.params.id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid ticket ID.",
+        });
+      }
+
+      // Fetch first so the author ID is available for the delete event.
+      const ticket = await Ticket.findById(req.params.id);
+
+      if (!ticket) {
+        return res.status(404).json({
+          success: false,
+          message: "Ticket not found.",
+        });
+      }
+
+      // Notify clients before removing the ticket from the database.
+      emitTicketChanged(req, ticket, { action: "deleted" });
+
+      await Ticket.findByIdAndDelete(req.params.id);
+
+      return res.status(200).json({
+        success: true,
+        message: "Ticket permanently deleted.",
+        deletedTicketId: ticket._id,
+      });
+    } catch (error) {
+      console.error("Admin ticket deletion error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to delete the ticket.",
       });
     }
   },

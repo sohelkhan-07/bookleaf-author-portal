@@ -4,7 +4,6 @@ const { authenticateToken, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
-
 router.get(
   "/my-books",
   authenticateToken,
@@ -13,7 +12,7 @@ router.get(
     try {
       const books = await Book.find({ author: req.user.id })
         .select(
-          "bookId title isbn genre publicationDate status mrp authorRoyaltyPerCopy totalCopiesSold totalRoyaltyEarned royaltyPaid royaltyPending lastRoyaltyPayoutDate printPartner availableOn"
+          "bookId title isbn genre publicationDate status mrp authorRoyaltyPerCopy totalCopiesSold totalRoyaltyEarned royaltyPaid royaltyPending lastRoyaltyPayoutDate printPartner availableOn",
         )
         .sort({ title: 1 })
         .lean();
@@ -31,7 +30,7 @@ router.get(
         message: "Unable to retrieve your books at this time.",
       });
     }
-  }
+  },
 );
 
 module.exports = router;
